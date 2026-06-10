@@ -469,6 +469,24 @@ with col_l:
     """, unsafe_allow_html=True)
 
 with col_r:
+    # Variables intermedias para evitar saltos de línea dentro del HTML
+    term1    = f"{b/(a*(a+b)):.6f}"
+    term2    = f"{d/(c*(c+d)):.6f}"
+    exp_inf  = f"{ln_rp - z*se:.4f}"
+    exp_sup  = f"{ln_rp + z*se:.4f}"
+
+    paso5_formula = (
+        f"SE = √[ b/(a·n_exp) + d/(c·n_no) ]<br>"
+        f"SE = √[ {b}/{a}·{a+b} + {d}/{c}·{c+d} ]<br>"
+        f"SE = √[ {term1} + {term2} ]<br>"
+        f"SE = <strong>{se:.4f}</strong>"
+    )
+    paso6_formula = (
+        f"z = {z:.4f}<br>"
+        f"IC_inf = e^(ln(RP) − z·SE) = e^{exp_inf} = <strong>{ic_inf:.4f}</strong><br>"
+        f"IC_sup = e^(ln(RP) + z·SE) = e^{exp_sup} = <strong>{ic_sup:.4f}</strong>"
+    )
+
     st.markdown(f"""
     <div class="paso">
       <div class="paso-titulo">Paso 4 — Logaritmo de la RP</div>
@@ -478,17 +496,12 @@ with col_r:
 
     <div class="paso">
       <div class="paso-titulo">Paso 5 — Error estándar del ln(RP)</div>
-      <div class="formula-box">SE = √[ b/(a·n_exp) + d/(c·n_no) ]<br>
-SE = √[ {b}/{a}·{a+b} + {d}/{c}·{c+d} ]<br>
-SE = √[ {b/(a*(a+b)):.6f} + {d/(c*(c+d)):.6f} ]<br>
-SE = <strong>{se:.4f}</strong></div>
+      <div class="formula-box">{paso5_formula}</div>
     </div>
 
     <div class="paso">
       <div class="paso-titulo">Paso 6 — Intervalo de Confianza al {int(nivel*100)}%</div>
-      <div class="formula-box">z = {z:.4f}<br>
-IC_inf = e^(ln(RP) − z·SE) = e^{ln_rp-z*se:.4f} = <strong>{ic_inf:.4f}</strong><br>
-IC_sup = e^(ln(RP) + z·SE) = e^{ln_rp+z*se:.4f} = <strong>{ic_sup:.4f}</strong></div>
+      <div class="formula-box">{paso6_formula}</div>
     </div>
     """, unsafe_allow_html=True)
 
