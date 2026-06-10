@@ -317,60 +317,79 @@ def barras_prevalencias(pe, pn, nom_exposicion):
     return fig
 
 
-# ── Sidebar: ingreso de datos ────────────────────────────────────────────────
+# ── Valores por defecto en session_state ─────────────────────────────────────
+# Se inicializan una sola vez. Los botones de ejemplo los sobreescriben directamente.
+
+DEFAULTS = dict(inp_a=80, inp_b=120, inp_c=40, inp_d=260,
+                inp_exp="Tabaquismo", inp_enf="Bronquitis crónica", inp_nivel=0.95)
+
+for k, v in DEFAULTS.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+EJEMPLOS = {
+    "🚬 Tabaquismo y bronquitis":        dict(inp_a=80,  inp_b=120, inp_c=40,  inp_d=260,
+                                              inp_exp="Tabaquismo",        inp_enf="Bronquitis crónica"),
+    "🪑 Sedentarismo y diabetes":        dict(inp_a=150, inp_b=100, inp_c=50,  inp_d=300,
+                                              inp_exp="Sedentarismo",      inp_enf="Diabetes tipo 2"),
+    "🤱 Lactancia y otitis (protector)": dict(inp_a=30,  inp_b=170, inp_c=60,  inp_d=140,
+                                              inp_exp="Lactancia materna", inp_enf="Otitis media"),
+    "☕ Sin asociación (café/HTA)":      dict(inp_a=45,  inp_b=155, inp_c=40,  inp_d=160,
+                                              inp_exp="Consumo de café",   inp_enf="Hipertensión"),
+}
+
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("## ✏️ Datos del estudio")
-    st.caption("Completa los cuatro valores de tu tabla 2×2")
 
-    nom_exp = st.text_input("Nombre de la exposición",  value="Tabaquismo")
-    nom_enf = st.text_input("Nombre de la enfermedad",  value="Bronquitis crónica")
+    # ── Sección 1: Ejemplos ──────────────────────────────────────────────────
+    st.markdown("### 📂 Cargar un ejercicio de práctica")
+    st.caption("Haz clic para llenar los datos automáticamente.")
+
+    for nombre_ej, vals in EJEMPLOS.items():
+        if st.button(nombre_ej, use_container_width=True):
+            for k, v in vals.items():
+                st.session_state[k] = v
 
     st.markdown("---")
-    st.markdown("**Tabla 2×2**")
+
+    # ── Sección 2: Datos del estudio ─────────────────────────────────────────
+    st.markdown("### ✏️ Datos del estudio")
+    st.caption("Puedes editar los nombres y los valores directamente.")
+
+    st.text_input("Nombre de la exposición", key="inp_exp")
+    st.text_input("Nombre de la enfermedad", key="inp_enf")
+
+    st.markdown("**Valores de la tabla 2×2**")
 
     col1, col2 = st.columns(2)
     with col1:
-        a = st.number_input("a — Expuestos CON enfermedad",   min_value=0, value=80,  step=1)
-        c = st.number_input("c — No exp. CON enfermedad",     min_value=0, value=40,  step=1)
+        st.number_input("a  (expuestos CON)", min_value=0, step=1, key="inp_a")
+        st.number_input("c  (no exp. CON)",   min_value=0, step=1, key="inp_c")
     with col2:
-        b = st.number_input("b — Expuestos SIN enfermedad",   min_value=0, value=120, step=1)
-        d = st.number_input("d — No exp. SIN enfermedad",     min_value=0, value=260, step=1)
+        st.number_input("b  (expuestos SIN)", min_value=0, step=1, key="inp_b")
+        st.number_input("d  (no exp. SIN)",   min_value=0, step=1, key="inp_d")
 
     st.markdown("---")
-    nivel = st.select_slider(
-        "Nivel de confianza",
+
+    # ── Sección 3: Nivel de confianza ────────────────────────────────────────
+    st.markdown("### 🎯 Nivel de confianza")
+    st.select_slider(
+        "Selecciona el nivel",
         options=[0.90, 0.95, 0.99],
-        value=0.95,
-        format_func=lambda x: f"{int(x*100)}%"
+        format_func=lambda x: f"{int(x*100)}%",
+        key="inp_nivel",
     )
 
-    calcular = st.button("Calcular RP", type="primary", use_container_width=True)
+# ── Leer valores desde session_state ─────────────────────────────────────────
 
-    st.markdown("---")
-    st.markdown("### Ejercicios de práctica")
-    ejemplos = {
-        "Tabaquismo y bronquitis":      (80,  120, 40,  260),
-        "Sedentarismo y diabetes":      (150, 100, 50,  300),
-        "Lactancia y otitis (protector)":(30, 170, 60,  140),
-        "Sin asociación (café/HTA)":    (45,  155, 40,  160),
-    }
-    for nombre_ej, vals in ejemplos.items():
-        if st.button(nombre_ej, use_container_width=True):
-            st.session_state["ej_a"] = vals[0]
-            st.session_state["ej_b"] = vals[1]
-            st.session_state["ej_c"] = vals[2]
-            st.session_state["ej_d"] = vals[3]
-            st.rerun()
-
-    # Aplicar ejemplo si se seleccionó
-    for key in ["ej_a", "ej_b", "ej_c", "ej_d"]:
-        if key in st.session_state:
-            a = st.session_state.pop("ej_a", a)
-            b = st.session_state.pop("ej_b", b)
-            c = st.session_state.pop("ej_c", c)
-            d = st.session_state.pop("ej_d", d)
-            break
+a       = int(st.session_state["inp_a"])
+b       = int(st.session_state["inp_b"])
+c       = int(st.session_state["inp_c"])
+d       = int(st.session_state["inp_d"])
+nom_exp = st.session_state["inp_exp"].strip() or "Exposición"
+nom_enf = st.session_state["inp_enf"].strip() or "Enfermedad"
+nivel   = st.session_state["inp_nivel"]
 
 
 # ── Encabezado ───────────────────────────────────────────────────────────────
